@@ -139,7 +139,8 @@ conda deactivate
 ## Case3. 解析結果の修正とレポートの再作成（手作業）
 解析フォルダのファイル操作を伴うため、**全ての工程は gxd_pipeline ユーザーで実行する。** \
 検出された変異等を削除する場合は worksheet ツールの remove コマンドを利用して解析結果を修正できるが、\
-検出された内容の変更(例：Oncogenicityの変更)はsummaryファイルを手作業で修正し、データベースの書き換えとレポートの再作成を実施する。\
+検出された変異の報告内容を変更する場合(Oncogenicityの変更など)はsummaryファイルを手作業で修正し、\
+データベースの書き換えとレポートの再作成を実施する。\
 OncoStation上でComfirm済みの場合は、GSにComfirmを取り下げてもらってから作業すること。
 <details>
   <summary> 
