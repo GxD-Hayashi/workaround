@@ -136,5 +136,75 @@ conda deactivate
 ```
 </details>
 
+## Case3. 解析結果の修正とレポートの再作成（手作業）
+解析フォルダのファイル操作を伴うため、**全ての工程は gxd_pipeline ユーザーで実行する。** \
+OncoStation上でComfirm済みの場合は、GSにComfirmを取り下げてもらってから作業すること。
+<details>
+  <summary> 
+    Instructions
+  </summary>
 
+### 1\. 変数の設定
+```
+WORKDIR=/data1/data/result
+test_type=
+batch=
+sample=
+SIF=/data1/GxD_${test_type}/Pipeline/containers/inhouse.sif
+```
+test_type : 解析種別。eWESまたはWTS \
+batch : バッチフォルダ名 \
+sample : 当該検体のSample ID
+### 2\. データの編集
+解析結果を格納しているフォルダに移動してsummaryファイルを編集する \
+ - type1 eWES SNV & InDelの場合
+```
+cd ${WORKDIR}/${batch}/${sample}/Summary
+cp ${sample}.summarized.snv.target.tsv ${sample}.summarized.snv.target.original.tsv
+vi ${sample}.summarized.snv.target.tsv
+```
+ - type2 eWES CNVの場合
+```
+cd ${WORKDIR}/${batch}/${sample}/Summary
+cp ${sample}.summarized.cnv.exome.tsv ${sample}.summarized.cnv.exome.original.tsv
+vi ${sample}.summarized.cnv.exome.tsv
+```
+ - type3 WTS Fusionの場合
+```
+cd ${WORKDIR}/${batch}/${sample}/Summary
+cp ${sample}.summarized.fusion.tsv ${sample}.summarized.fusion.original.tsv
+vi ${sample}.summarized.fusion.tsv
+```
+※type1-3 は不要な変異の行を削除して上書き保存（DRUG が複数該当する場合は、該当するものすべて削除する）
 
+ - type4 WTS Alternative Splicingの場合
+```
+cd ${WORKDIR}/${batch}/${sample}/Summary
+cp ${sample}.summarized.splice.tsv ${sample}.summarized.splice.original.tsv
+vi ${sample}.summarized.splice.tsv
+```
+※type4 は不要な変異の2カラム目以降をblankにして上書き保存（1列目の値はレポートに使用するので、行削除ではなく値を削除する）
+
+### 3\. レポートファイルの退避
+元の report.json, report.pdfをリネームする。
+```
+cd ${WORKDIR}/${batch}/${sample}/Summary
+mv ${sample}.report.json ${sample}.original.report.json 
+mv ${sample}.report.pdf ${sample}.original.report.pdf
+```
+### 4\. レポート再作成の準備
+データベースに登録済みの解析結果を削除して、analysis statusを101（解析中）にセットする。\
+worksheet ツールの resetコマンドを使用。
+```
+worksheet reset --sample ${sample} –status 101
+```
+エイリアス未作成の場合
+```
+singularity exec --bind /data1 /data1/labTools/labTools.sif python /data1/labTools/worksheet/latest/worksheet.py reset --sample ${sample} –status 101
+```
+### 5\. データベースへの再アップロードとレポート再作成
+解析実行時のPipelineバージョンがデフォルトとは異なる場合は、**解析実行時のPipelineバージョンのmodulesのmain.pyファイルを指定する**こと。
+```
+singularity shell --bind /data1 $SIF python3 /data1/GxD_${test_type}/Pipeline/modules/report_json/main.py -s ${sample} -d ${WORKDIR}/${test_type}/${batch}/${sample}/Summary -o ${WORKDIR}/${test_type}/${batch}/${sample}/Summary/${sample}.report.json -r ${WORKDIR}/${test_type}/${batch}/${sample}/Summary/${sample}.report.pdf -c True -u 192.168.9.100 -p 3014 -v v1.1.0 --upload true --start_log ${WORKDIR}/${test_type}/${batch}/${sample}/QC/fastp/${sample}.fastp.start.time.log
+```
+</details>
