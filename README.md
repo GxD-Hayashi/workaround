@@ -1,5 +1,5 @@
-# special-case
-## Case1. PureCNエラー終了時の対応手順
+# イレギュラー発生時の対応
+## Case1. PureCN エラー終了時の手順
 解析フォルダのファイル操作を伴うため、**全ての工程は gxd_pipeline ユーザーで実行する。**
 ### 1\. 変数の設定
 ```
@@ -61,7 +61,7 @@ snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_eWE
 conda deactivate
 ```
 
-## Case2. STAR-SEQR 超過時の対応手順
+## Case2. STAR-SEQR 超過時の手順
 解析フォルダのファイル操作を伴うため、**全ての工程は gxd_pipeline ユーザーで実行する。**
 ### 1\. 変数の設定
 ```
