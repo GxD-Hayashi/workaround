@@ -141,8 +141,8 @@ conda deactivate
 </details>
 
 ## case3. 解析結果の修正とレポートの再作成（手作業）
-検出された変異等を削除する場合は worksheet ツールの remove コマンドを利用して解析結果を修正できるが、\
-検出された変異の報告内容を変更する場合(Oncogenicityの変更など)はsummaryファイルを手作業で修正し、\
+検出された変異等を<ins>**削除**</ins>する場合は worksheet ツールの remove コマンドを利用して解析結果を修正できるが、\
+検出された変異の<ins>**報告内容を変更**</ins>する場合(Oncogenicityの変更など)はsummaryファイルを手作業で修正し、\
 データベースの書き換えとレポートの再作成を実施する。\
 OncoStation上でComfirm済みの場合は、GSにComfirmを取り下げてもらってから作業すること。
 <details>
