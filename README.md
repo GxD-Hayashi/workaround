@@ -1,6 +1,6 @@
 # イレギュラー発生時の対応
 解析フォルダのファイル操作を伴うため、**全ての工程は gxd_pipeline ユーザーで実行する。**
-## Case1. PureCN エラー終了時の手順
+## case1. PureCN エラー終了時の手順
 eWES Pipeline CNV解析工程において PureCN の実行時に purity/ploidy の算出ができずに途中終了することがある。\
 2025/6/6 時点では、bin size 400,800,1600のうちいずれか1つだけエラー終了するケースが確認されています。
 <details>
@@ -69,7 +69,7 @@ conda deactivate
 ```
 </details>
 
-## Case2. STAR-SEQR 超過時の手順
+## case2. STAR-SEQR 超過時の手順
 WTS Pipeline Fusion解析工程において、STAR-SEQRが長時間かかる場合がある。\
 200時間を超えるとタイムアウトする可能性があるとのこと。
 [STAR-SEQR issue](https://github.com/ExpressionAnalysis/STAR-SEQR/issues/23)
@@ -140,7 +140,7 @@ conda deactivate
 ```
 </details>
 
-## Case3. 解析結果の修正とレポートの再作成（手作業）
+## case3. 解析結果の修正とレポートの再作成（手作業）
 検出された変異等を削除する場合は worksheet ツールの remove コマンドを利用して解析結果を修正できるが、\
 検出された変異の報告内容を変更する場合(Oncogenicityの変更など)はsummaryファイルを手作業で修正し、\
 データベースの書き換えとレポートの再作成を実施する。\
