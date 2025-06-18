@@ -101,7 +101,7 @@ grep "INFO - Writing chimeric transcript" `ls -t  ${WORKDIR}/${batch}/${sample}/
 ```
 ### 3\. 実行ジョブの削除 
 qstat -r で実行中のジョブを確認し、job name が [sample].starseqr_[0-9] があれば qdel で強制終了する。\
-*STAR-SEQR実行中の場合のみ実施。**すでにタイムアウトしている場合はスキップする。**
+※ STAR-SEQR実行中の場合のみ実施。**すでにタイムアウトしている場合はスキップする。**
 ### 4\. convert_cff 工程の実行
 STAR-SEQR の結果ファイルが作成されず、後続の convert_cff工程でエラー終了するため、この工程を手作業で実行する。\
 arriba/STAR-Fusionの結果ファイルをcff形式に整形する。
@@ -207,8 +207,21 @@ worksheet reset --sample ${sample} –status 101
 ```
 singularity exec --bind /data1 /data1/labTools/labTools.sif python /data1/labTools/worksheet/latest/worksheet.py reset --sample ${sample} –status 101
 ```
+**※ Pipeline、reference、コンテナファイル等が初回解析時と同じ場合はcronの自動実行を利用してもよい。**\
+初回解析時から変更があった場合は、変更に関連した工程から再実行して解析結果を上書きすることに注意。\
+データベースに登録済みの解析結果を削除して report.json, report.pdfをリネームし、analysis statusを100（解析待ち）にセットする。\
+worksheet ツールの resetコマンドを使用。
+```
+worksheet reset --sample ${sample} –status 100
+```
+エイリアス未作成の場合
+```
+singularity exec --bind /data1 /data1/labTools/labTools.sif python /data1/labTools/worksheet/latest/worksheet.py reset --sample ${sample} –status 100
+```
+⇒ cronにより10分以内に解析が開始され、report_json 工程のみ実施される。
+
 ### 4\. データベースへの再アップロードとレポート再作成
-解析実行時のPipelineバージョンがデフォルトとは異なる場合は、**解析実行時のPipelineバージョンのmodulesのmain.pyファイルを指定する**こと。
+前工程でanalysis statusを101（解析中）にセットした場合に実行する。解析実行時のPipelineバージョンがデフォルトとは異なる場合は、**解析実行時のPipelineバージョンのmodulesのmain.pyファイルを指定する**こと。
 ```
 singularity shell --bind /data1 $SIF python3 /data1/GxD_${test_type}/Pipeline/modules/report_json/main.py -s ${sample} -d ${WORKDIR}/${test_type}/${batch}/${sample}/Summary -o ${WORKDIR}/${test_type}/${batch}/${sample}/Summary/${sample}.report.json -r ${WORKDIR}/${test_type}/${batch}/${sample}/Summary/${sample}.report.pdf -c True -u 192.168.9.100 -p 3014 -v v1.1.0 --upload true --start_log ${WORKDIR}/${test_type}/${batch}/${sample}/QC/fastp/${sample}.fastp.start.time.log
 ```
