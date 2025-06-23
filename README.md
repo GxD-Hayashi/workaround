@@ -171,9 +171,9 @@ cd $WORKDIR/$batch/$sample/Fusion/Metafusion
 ll ${sample}.*.cff
 ```
 Fusionが検出されなかった場合はデータサイズが0になる。ツールに対応する出力ファイル名は以下の通り。\
-STAR-Fusionの出力結果: ${sample}.star_fusion.cff \
-STAR-SEQRの出力結果: ${sample}.star_seqr.cff \
-arribaの出力結果: ${sample}.arriba.cff 
+&nbsp;&nbsp;&nbsp;&nbsp;STAR-Fusionの出力結果: ${sample}.star_fusion.cff \
+&nbsp;&nbsp;&nbsp;&nbsp;STAR-SEQRの出力結果: ${sample}.star_seqr.cff \
+&nbsp;&nbsp;&nbsp;&nbsp;arribaの出力結果: ${sample}.arriba.cff 
 
 ### 4\. 中間ファイルの作成
 データサイズが0のもののみcffファイルを作成する。**ファイルサイズが0以上のものを上書きしないように注意する**\
