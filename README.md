@@ -140,7 +140,76 @@ conda deactivate
 ```
 </details>
 
-## case3. 解析結果の修正とレポートの再作成（手作業）
+## case3. 
+arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、どれか1つでもFusionが検出されず、rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。
+<details>
+  <summary> 
+    Instructions
+  </summary>
+  
+### 1\. 変数の設定
+```
+WORKDIR=/data1/data/result/WTS
+SNAKEFILE=/data1/GxD_WTS/Pipeline/workflow/Snakefile
+batch=
+sample=
+```
+batch : 当該検体のbatchフォルダ名 \
+sample : 当該検体のSample ID
+
+### 2\. 解析の進捗確認
+qstatで当該検体の解析が実行中でないことを確認したのち、Logsフォルダに出力されている最新の *.${sample}.merge_cff_*.err の中身を確認し、merge_cff 工程がエラー終了していることを確認する。
+```
+cd $WORKDIR/$batch/$sample/Logs
+ll -t *.${sample}.merge_cff_*.err
+```
+
+### 3\. Fusionが検出されていないツールを特定する
+*/Fusion/Metafusion/ の直下に各Fusion検出ツールの結果をcff形式に変換したものが作成されている。
+```
+cd $WORKDIR/$batch/$sample/Fusion/Metafusion
+ll ${sample}.*.cff
+```
+Fusionが検出されなかった場合はデータサイズが0になる。ツールに対応する出力ファイル名は以下の通り。\
+STAR-Fusionの出力結果: ${sample}.star_fusion.cff \
+STAR-SEQRの出力結果: ${sample}.star_seqr.cff \
+arribaの出力結果: ${sample}.arriba.cff 
+
+### 4\. 中間ファイルの作成
+データサイズが0のもののみcffファイルを作成する。**ファイルサイズが0以上のものを上書きしないように注意する**\
+STAR-Fusionの場合
+```
+yes NA | head -n 17 | paste -sd '\t' > ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion/${sample}.star_fusion.cff
+```
+STAR-SEQRの場合
+```
+yes NA | head -n 17 | paste -sd '\t' > ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion/${sample}.star_seqr.cff
+```
+arribaの場合
+```
+yes NA | head -n 17 | paste -sd '\t' > ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion/${sample}.arriba.cff
+```
+### 5\. 後工程の実行
+snakemake実行用の環境に入る
+```
+source /data1/iGeniPipe/miniconda3/bin/activate cs
+```
+snakemake dry run で実行されるコマンドを確認する。convert_cffを実行しないこと、merge_cff以降が実行されることを確認する。
+```
+snakemake --dry-run --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch}
+```
+解析の続きを実行する
+```
+snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} &
+```
+仮想環境から出る
+```
+conda deactivate
+```
+
+</details>
+
+## case4. 解析結果の修正とレポートの再作成（手作業）
 検出された変異等を<ins>**削除**</ins>する場合は worksheet ツールの remove コマンドを利用して解析結果を修正できるが、\
 検出された変異の<ins>**報告内容を変更**</ins>する場合(Oncogenicityの変更など)はsummaryファイルを手作業で修正し、\
 データベースの書き換えとレポートの再作成を実施する。\
