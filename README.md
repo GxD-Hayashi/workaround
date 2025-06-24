@@ -5,7 +5,7 @@ eWES Pipeline CNV解析工程において PureCN の実行時に purity/ploidy �
 2025/6/6 時点では、bin size 400,800,1600のうちいずれか1つだけエラー終了するケースが確認されています。
 <details>
   <summary> 
-    Instructions
+    More Details
   </summary>
 
 ### 1\. 変数の設定
@@ -75,7 +75,7 @@ WTS Pipeline Fusion解析工程において、STAR-SEQRが長時間かかる場�
 [STAR-SEQR issue](https://github.com/ExpressionAnalysis/STAR-SEQR/issues/23)
 <details>
   <summary> 
-    Instructions
+    More Details
   </summary>
 
 ### 1\. 変数の設定
@@ -144,7 +144,7 @@ conda deactivate
 arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、いずれか1つ以上のツールでFusionが検出されず rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。
 <details>
   <summary> 
-    Instructions
+    More Details
   </summary>
   
 ### 1\. 変数の設定
@@ -216,7 +216,7 @@ conda deactivate
 OncoStation上でComfirm済みの場合は、GSにComfirmを取り下げてもらってから作業すること。
 <details>
   <summary> 
-    Instructions
+    More Details
   </summary>
 
 ### 1\. 変数の設定
