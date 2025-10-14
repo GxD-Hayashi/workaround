@@ -92,7 +92,7 @@ sample : 当該検体のSample ID
 ログの最終行に以下の文字列が含まれていることを確認する。（融合候補の相同性を計算する工程。STAR-SEQRが終了しない場合はここでスタックしている可能性が高い）
 >	INFO - Getting fusions homology mapping scores
 ```
-tail -4 `ls -t ${WORKDIR}/${batch}/${sample}/Logs/*.${sample}.starseqr_[0-9]*.err | head -1`
+tail -4 \`ls -t ${WORKDIR}/${batch}/${sample}/Logs/*.${sample}.starseqr_[0-9]*.err | head -1\`
 ```
 または、ログファイルに以下の文字列が出現することを確認する。(chimeric transcriptsの書き出し終了フラグ)
 >	INFO - Writing chimeric transcripts
