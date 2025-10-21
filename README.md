@@ -213,7 +213,7 @@ conda deactivate
 </details>
 
 ## case4. STAR-SEQR 停止による解析中断
-STAR-SEQRにおいて、breakpointの候補が1つもないと処理が中断されて output が作成されないため、次のステップが実行されない。※リード数がかなり少ない場合などに起こる
+STAR-SEQRにおいて、breakpointの候補が1つもないと処理が中断されるため、次のステップ(convert_cff)が実行されない。※リード数がかなり少ない場合などに起こる
 <details>
   <summary> 
     More Details
@@ -252,13 +252,13 @@ snakemake dry run で実行されるコマンドを確認する。starseqr 以�
 ```
 snakemake --dry-run --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} 
 ```
-解析の続きを実行する ※ 強制的に convert_cff から実行する
+解析の続きを実行する ※ 強制的に convert_cff から実行させる
 ```
 snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun convert_cff &
 ```
-STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 [case3.Fusion不検出による解析中断](#case3) を参照して NA を記載したcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成すること。
+STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 [case3.Fusion不検出による解析中断](#case3) を参照してcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成する。
 
-解析の続きを実行する ※ 強制的に merge_cff から実行する
+解析の続きを実行する ※ 強制的に merge_cff から実行させる
 ```
 snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun merge_cff &
 ```
