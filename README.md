@@ -88,6 +88,7 @@ sample=
 ```
 batch : 当該検体のbatchフォルダ名 \
 sample : 当該検体のSample ID
+
 ### 2\. STAR-SEQR 進捗状況の確認
 ログの最終行に以下の文字列が含まれていることを確認する。（融合候補の相同性を計算する工程。STAR-SEQRが終了しない場合はここでスタックしている可能性が高い）
 >	INFO - Getting fusions homology mapping scores
@@ -158,7 +159,7 @@ batch : 当該検体のbatchフォルダ名 \
 sample : 当該検体のSample ID
 
 ### 2\. 解析の進捗確認
-qstatで当該検体の解析が実行中でないことを確認したのち、Logsフォルダに出力されている最新の *.${sample}.merge_cff_*.err の中身を確認し、merge_cff 工程がエラー終了していることを確認する。
+qstatで当該検体の解析が実行中でないことを確認したのち、Logsフォルダに出力されている最新の \*.${sample}.merge_cff_*.err の中身を確認し、merge_cff 工程がエラー終了していることを確認する。
 ```
 cd $WORKDIR/$batch/$sample/Logs
 ll -t *.${sample}.merge_cff_*.err
@@ -209,7 +210,59 @@ conda deactivate
 
 </details>
 
-## case4. 解析結果の修正とレポートの再作成（手作業）
+## case4. STAR-SEQR 停止による解析中断
+STAR-SEQRにおいて、breakpointの候補が1つもないと処理が中断されて output が作成されないため、次のステップが実行されない。※リード数がかなり少ない場合などに起こる
+<details>
+  <summary> 
+    More Details
+  </summary>
+
+### 1\. 変数の設定
+```
+WORKDIR=/data1/data/result/WTS
+SNAKEFILE=/data1/GxD_WTS/Pipeline/workflow/Snakefile
+batch=
+sample=
+```
+batch : 当該検体のbatchフォルダ名 \
+sample : 当該検体のSample ID
+
+### 2\. 解析の進捗確認
+qstatで当該検体の解析が実行中でないことを確認したのち、Logsフォルダに出力されている最新の \*.${sample}.starseqr_*.err の中身を確認し、starseqr 工程がエラー終了していることを確認する。
+```
+cd $WORKDIR/$batch/$sample/Logs
+ll -t *.${sample}.starseqr_*.err
+```
+
+### 3\. 中間ファイルの作成
+次の工程(convert_cff)でSTAR-SEQRの結果として参照するファイルを作成する。
+```
+cd $WORKDIR/$batch/$sample/Fusion/STAR-SEQR/${sample}_STAR-SEQR
+cp ${sample}_STAR-SEQR_breakpoints.txt ${sample}_STAR-SEQR_candidates.txt
+```
+
+### 4\.  後工程の実行
+snakemake実行用の環境に入る
+```
+source /data1/iGeniPipe/miniconda3/bin/activate cs
+```
+snakemake dry run で実行されるコマンドを確認する。starseqr 以降が実行されることを確認する。
+```
+snakemake --dry-run --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} 
+```
+解析の続きを実行する ※ 強制的に convert_cff から実行する
+```
+snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun convert_cff &
+```
+仮想環境から出る
+```
+conda deactivate
+```
+
+
+</details>
+
+## case5. 解析結果の修正とレポートの再作成（手作業）
 検出された変異等を<ins>**削除**</ins>する場合は worksheet ツールの remove コマンドを利用して解析結果を修正できるが、
 検出された変異の<ins>**報告内容を変更**</ins>する場合(Oncogenicityの変更など)はsummaryファイルを手作業で修正し、
 データベースの書き換えとレポートの再作成を実施する必要がある。\
