@@ -103,6 +103,7 @@ grep "INFO - Writing chimeric transcript" `ls -t  ${WORKDIR}/${batch}/${sample}/
 ### 3\. 実行ジョブの削除 
 qstat -r で実行中のジョブを確認し、job name が [sample].starseqr_[0-9] があれば qdel で強制終了する。\
 ※ STAR-SEQR実行中の場合のみ実施。**すでにタイムアウトしている場合はスキップする。**
+
 ### 4\. convert_cff 工程の実行
 STAR-SEQR の結果ファイルが作成されず、後続の convert_cff工程でエラー終了するため、この工程を手作業で実行する。\
 arriba/STAR-Fusionの結果ファイルをcff形式に整形する。
@@ -253,6 +254,12 @@ snakemake --dry-run --snakefile $SNAKEFILE --directory /data1/GxD --profile /dat
 解析の続きを実行する ※ 強制的に convert_cff から実行する
 ```
 snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun convert_cff &
+```
+STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 case3.Fusion不検出による解析中断 を参照して NA を記載したcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成すること。
+
+解析の続きを実行する ※ 強制的に merge_cff から実行する
+```
+snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun merge_cff &
 ```
 仮想環境から出る
 ```
