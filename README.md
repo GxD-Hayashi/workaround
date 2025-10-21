@@ -142,7 +142,8 @@ conda deactivate
 ```
 </details>
 
-## case3. Fusion不検出による解析中断
+<a id="case3"></a>
+## case3. Fusion不検出による解析中断 
 arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、いずれか1つ以上のツールでFusionが検出されず rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。
 <details>
   <summary> 
@@ -255,7 +256,7 @@ snakemake --dry-run --snakefile $SNAKEFILE --directory /data1/GxD --profile /dat
 ```
 snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun convert_cff &
 ```
-STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 case3.Fusion不検出による解析中断 を参照して NA を記載したcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成すること。
+STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 [case3.Fusion不検出による解析中断](#case3) を参照して NA を記載したcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成すること。
 
 解析の続きを実行する ※ 強制的に merge_cff から実行する
 ```
@@ -265,8 +266,6 @@ snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS
 ```
 conda deactivate
 ```
-
-
 </details>
 
 ## case5. 解析結果の修正とレポートの再作成（手作業）
