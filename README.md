@@ -145,7 +145,7 @@ conda deactivate
 
 <a id="case3"></a>
 ## case3. Fusion不検出による解析中断 
-arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、いずれか1つ以上のツールでFusionが検出されず rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。
+WTS Pipeline Fusion解析工程において、Arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、いずれか1つ以上のツールでFusionが検出されず rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。
 <details>
   <summary> 
     More Details
@@ -214,7 +214,7 @@ conda deactivate
 </details>
 
 ## case4. STAR-SEQR 停止による解析中断
-STAR-SEQRにおいて、breakpointの候補が1つもないと処理が中断されるため、次のステップ(convert_cff)が実行されない。※リード数がかなり少ない場合などに起こる
+WTS Pipeline Fusion解析工程において、STAR-SEQRでbreakpointの候補が1つもないと処理が中断されるため、次のステップ(convert_cff)が実行されない。※リード数がかなり少ない場合などに起こる
 <details>
   <summary> 
     More Details
