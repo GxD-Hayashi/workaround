@@ -269,7 +269,65 @@ conda deactivate
 ```
 </details>
 
-## case5. 解析結果の修正とレポートの再作成（手作業）
+## case5. Fusion figure のレイアウトエラー（文字切れなど）
+WTS Pipeline Fusion解析工程において、domain名が長い、domainの数が多いなどの場合に、Fusion Fugure のレイアウトが崩れることがある。
+<details>
+  <summary> 
+    More Details
+  </summary>
+
+### 1\. 変数の設定
+```
+WORKDIR=/data1/data/result
+batch=
+sample=
+SIF=/data1/GxD_WTS/Pipeline/containers/inhouse.sif
+```
+batch : バッチフォルダ名 \
+sample : 当該検体のSample ID
+
+### 2\.Fugure の作成を依頼する
+ITチーム経由で開発チームに体裁を修正したFigureの作成を依頼する。\
+Figure作成に必要な途中ファイルを送付するよう指示があるので、ITチーム経由で送付する。
+
+### 3\. データの編集
+開発チームに作成してもらった .png ファイルを以下の場所に格納する。\
+同名のファイルがPipelineで作成されているので、上書きするか元のファイルを他のフォルダに避難させる。※元ファイルを同じフォルダに置かない。
+```
+/data1/data/result/WTS/${batch}/${sample}/Summary/Domains/
+```
+
+### 4\. レポート再作成の準備
+データベースに登録済みの解析結果を削除して report.json, report.pdfをリネームし、analysis statusを101（解析中）にセットする。\
+worksheet ツールの resetコマンドを使用。
+```
+worksheet reset --sample ${sample} –status 101
+```
+エイリアス未作成の場合
+```
+singularity exec --bind /data1 /data1/labTools/labTools.sif python /data1/labTools/worksheet/latest/worksheet.py reset --sample ${sample} –status 101
+```
+**※ Pipeline、reference、コンテナファイル等が初回解析時と同じ場合はcronの自動実行を利用してもよい。**\
+初回解析時から変更があった場合は、変更に関連した工程から再実行して解析結果を上書きすることに注意。\
+データベースに登録済みの解析結果を削除して report.json, report.pdfをリネームし、analysis statusを100（解析待ち）にセットする。\
+worksheet ツールの resetコマンドを使用。
+```
+worksheet reset --sample ${sample} –status 100
+```
+エイリアス未作成の場合
+```
+singularity exec --bind /data1 /data1/labTools/labTools.sif python /data1/labTools/worksheet/latest/worksheet.py reset --sample ${sample} –status 100
+```
+⇒ cronにより10分以内に解析が開始され、report_json 工程のみ実施される。
+
+### 5\. データベースへの再アップロードとレポート再作成
+前工程でanalysis statusを101（解析中）にセットした場合に実行する。解析実行時のPipelineバージョンがデフォルトとは異なる場合は、**解析実行時のPipelineバージョンのmodulesのmain.pyファイルを指定する**こと。
+```
+singularity shell --bind /data1 $SIF python3 /data1/GxD_${test_type}/Pipeline/modules/report_json/main.py -s ${sample} -d ${WORKDIR}/${test_type}/${batch}/${sample}/Summary -o ${WORKDIR}/${test_type}/${batch}/${sample}/Summary/${sample}.report.json -r ${WORKDIR}/${test_type}/${batch}/${sample}/Summary/${sample}.report.pdf -c True -u 192.168.9.100 -p 3014 -v v1.1.0 --upload true --start_log ${WORKDIR}/${test_type}/${batch}/${sample}/QC/fastp/${sample}.fastp.start.time.log
+```
+</details>
+
+## case6. 解析結果の修正とレポートの再作成（手作業）
 検出された変異等を<ins>**削除**</ins>する場合は worksheet ツールの remove コマンドを利用して解析結果を修正できるが、
 検出された変異の<ins>**報告内容を変更**</ins>する場合(Oncogenicityの変更など)はsummaryファイルを手作業で修正し、
 データベースの書き換えとレポートの再作成を実施する必要がある。\
