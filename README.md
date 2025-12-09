@@ -10,9 +10,9 @@ worksheet ツールの check コマンドで解析実行中(ANALYSIS STATUS=101)
 worksheet check ‐fc <flowcellid>
 qstat -r | grep Full | cut -f1 -d "." | sort | uniq
 ```
-解析実行中のはずが実際にはジョブが投入されていない場合、パイプラインが途中終了している可能性が高い。\
-※タイムラグがあるので、qstatは数回実行して確認すること。
-
+解析実行中のはずが実際にはジョブが投入されていない場合、解析が途中終了している可能性が高い。\
+※タイムラグがあるので、qstatは数回実行して確認すること。\
+途中終了している検体があった場合は以下の手順で原因を特定する。
 ### 1\. 変数の設定
 ```
 WORKDIR=/data1/data/result
