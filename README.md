@@ -5,8 +5,9 @@
 
 ## 解析が途中終了しているかどうかの確認方法
 worksheet ツールの check コマンドで解析実行中(ANALYSIS STATUS=101)のSampleIDを確認する。\
-以下のコマンドで実際に投入されている実行中のジョブIDを確認する。
+また、qstatコマンドを利用して実際に投入されている実行中のジョブIDを確認する。
 ```
+worksheet check ‐fc <flowcellid>
 qstat -r | grep Full | cut -f1 -d "." | sort | uniq
 ```
 解析実行中のはずが実際にはジョブが投入されていない場合、パイプラインが途中終了している可能性が高い。\
