@@ -273,7 +273,7 @@ conda deactivate
 
 </details>
 
-## case4. STAR-SEQR 停止による解析中断
+## case5. STAR-SEQR 停止による解析中断
 WTS Pipeline Fusion解析工程において、STAR-SEQRでbreakpointの候補が1つもないと処理が中断されるため、次のステップ(convert_cff)が実行されない。※リード数がかなり少ない場合などに起こる
 <details>
   <summary> 
