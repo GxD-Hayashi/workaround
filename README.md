@@ -3,7 +3,70 @@
 記載する手順は2025年12月時点のものです。またSOPではありません(=正式な手順ではありません)ので、状況に合わせて適宜変更してください。\
 また、解析フォルダのファイル操作を伴うため、**全ての工程は gxd_pipeline ユーザーで実行してください。**
 
-## case1. PureCN エラー終了時の手順
+## 解析が途中終了しているかどうかの確認方法
+worksheet ツールの check コマンドで解析実行中(ANALYSIS STATUS=101)のSampleIDを確認する。\
+以下のコマンドで実際に投入されている実行中のジョブIDを確認する。
+```
+qstat -r | grep Full | cut -f1 -d "." | sort | uniq
+```
+解析実行中のはずが実際にはジョブが投入されていない場合、パイプラインが途中終了している可能性が高い。\
+※タイムラグがあるので、qstatは数回実行して確認すること。
+
+<details>
+  <summary> 
+    More Details
+  </summary>
+
+### 1\. 変数の設定
+```
+WORKDIR=/data1/data/result
+test_type=
+batch=
+sample=
+SIF=/data1/GxD_${test_type}/Pipeline/containers/inhouse.sif
+```
+test_type : 解析種別。eWESまたはWTS \
+batch : バッチフォルダ名 \
+sample : 当該検体のSample ID
+
+### 2\. ログファイルの確認
+解析結果を格納しているフォルダに移動してログファイルを確認する 
+```
+cd $WORKDIR/$test_type/$batch/$sample/Logs
+ll -t *.err | less
+```
+更新履歴が新しい順で .err ファイルが表示される。※最新の .err を作成した rule がパイプラインの途中終了の原因とは限らないことに注意。\
+*.err ファイルの中身を確認する。最終行が「1 of 1 steps (100%) done」でないものは正常終了できなかったもの。\
+*.err のファイル名からどの工程で止まったかを推測し、中断された原因に沿って対応する。
+</details>
+
+## case1. 高負荷による実行停止
+高負荷なプロセスが同時間帯にひとつの計算ノードに投入され、メモリが超過して当該ノードで実行中のジョブがkillされた結果、パイプラインが途中終了することがある。\
+サーバーの空き容量が十分にあればそのまま再実行すればよい。
+<details>
+  <summary> 
+    More Details
+  </summary>
+
+### 1\. 変数の設定
+```
+WORKDIR=/data1/data/result
+test_type=
+batch=
+sample=
+SIF=/data1/GxD_${test_type}/Pipeline/containers/inhouse.sif
+```
+test_type : 解析種別。eWESまたはWTS \
+batch : バッチフォルダ名 \
+sample : 当該検体のSample ID
+
+### 2\. 解析の再実行
+```
+sh $WORKDIR/$test_type/$batch/$sample/run.sh
+```
+</details>
+
+## case2. PureCN エラー終了時の手順
 eWES Pipeline CNV解析工程において PureCN の実行時に purity/ploidy の算出ができずに途中終了することがある。\
 2025/6/6 時点では、bin size 400,800,1600のうちいずれか1つだけエラー終了するケースが確認されています。
 <details>
@@ -72,7 +135,7 @@ conda deactivate
 ```
 </details>
 
-## case2. STAR-SEQR 超過時の手順
+## case3. STAR-SEQR 超過時の手順
 WTS Pipeline Fusion解析工程において、STAR-SEQRが長時間かかる場合がある。\
 200時間を超えるとタイムアウトする可能性があるとのこと。
 [STAR-SEQR issue](https://github.com/ExpressionAnalysis/STAR-SEQR/issues/23)
@@ -145,8 +208,8 @@ conda deactivate
 ```
 </details>
 
-<a id="case3"></a>
-## case3. Fusion不検出による解析中断 
+<a id="case4"></a>
+## case4. Fusion不検出による解析中断 
 WTS Pipeline Fusion解析工程において、Arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、いずれか1つ以上のツールでFusionが検出されず rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。
 <details>
   <summary> 
@@ -259,7 +322,7 @@ snakemake --dry-run --snakefile $SNAKEFILE --directory /data1/GxD --profile /dat
 ```
 snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun convert_cff &
 ```
-STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 [case3.Fusion不検出による解析中断](#case3) を参照してcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成する。
+STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 [case4.Fusion不検出による解析中断](#case4) を参照してcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成する。
 
 解析の続きを実行する ※ 強制的に merge_cff から実行させる
 ```
@@ -271,7 +334,7 @@ conda deactivate
 ```
 </details>
 
-## case5. Fusion figure のレイアウトエラー（文字切れなど）
+## case6. Fusion figure のレイアウトエラー（文字切れなど）
 WTS Pipeline Fusion解析工程において、domain名が長い、domainの数が多いなどの場合に、Fusion Fugure のレイアウトが崩れることがある。
 <details>
   <summary> 
@@ -329,7 +392,7 @@ singularity shell --bind /data1 $SIF python3 /data1/GxD_${test_type}/Pipeline/mo
 ```
 </details>
 
-## case6. 解析結果の修正とレポートの再作成（手作業）
+## case7. 解析結果の修正とレポートの再作成（手作業）
 検出された変異等を<ins>**削除**</ins>する場合は worksheet ツールの remove コマンドを利用して解析結果を修正できるが、
 検出された変異の<ins>**報告内容を変更**</ins>する場合(Oncogenicityの変更など)はsummaryファイルを手作業で修正し、
 データベースの書き換えとレポートの再作成を実施する必要がある。\
