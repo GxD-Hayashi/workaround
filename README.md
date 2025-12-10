@@ -4,15 +4,16 @@
 また、解析フォルダのファイル操作を伴うため、**全ての工程は gxd_pipeline ユーザーで実行してください。**
 
 ## 解析が途中終了しているかどうかの確認方法
-worksheet ツールの check コマンドで解析実行中(ANALYSIS STATUS=101)のSampleIDを確認する。\
+worksheet ツールの checkコマンド または OncoStation の Clinical Report ページでDB上で解析実行中(ANALYSIS STATUS=101)になっているSampleIDを確認する。\
 また、qstatコマンドを利用して実際に投入されている実行中のジョブIDを確認する。
 ```
 worksheet check ‐fc <flowcellid>
 qstat -r | grep Full | cut -f1 -d "." | sort | uniq
 ```
-解析実行中のはずが実際にはジョブが投入されていない場合、解析が途中終了している可能性が高い。\
+解析実行中のはずが実際にはジョブが投入されていない場合、解析が途中で終了している可能性が高い。\
 ※タイムラグがあるので、qstatは数回実行して確認すること。\
 途中終了している検体があった場合は以下の手順で原因を特定する。
+
 ### 1\. 変数の設定
 ```
 WORKDIR=/data1/data/result
@@ -35,6 +36,16 @@ ll -t *.err | less
 *.err ファイルの中身を確認する。最終行が「1 of 1 steps (100%) done」でないものは正常終了できなかったもの。\
 *.err のファイル名からどの工程で止まったかを推測し、中断された原因に沿って対応する。
 
+|エラーログファイル名                |エラーの原因              |対応                      |
+|:---------------------------------|:------------------------|:-------------------------|
+|\*.[sampleID].purecn_merge_\*.err |採用する bin size が決定できなかった |[case2](#case2) |
+|\*.[sampleID].purecn_purecn_\*.err|purecn 実行エラー         |[case2](#case2)           |
+|\*.[sampleID].starseqr_\*.err     |STAR-SEQR 超過により解析が進まない ※ジョブは実行中     |[case3](#case3) |
+|\*.[sampleID].merge_cff_\*.err    |Fusion不検出による解析中断 |[case4](#case4)           |
+|\*.[sampleID].starseqr_\*.err     |breakpointの候補が1つもなかったため処理が中断された     |[case5](#case5) |
+|上記以外                           |同じノードに高負荷なジョブが投入されたことによる中断     |[case1](#case1) |
+
+<a id="case1"></a>
 ## case1. 高負荷による実行停止
 高負荷なプロセスが同時間帯にひとつの計算ノードに投入され、メモリが超過して当該ノードで実行中のジョブがkillされた結果、パイプラインが途中終了することがある。\
 サーバーの空き容量が十分にあればそのまま再実行すればよい。
@@ -61,6 +72,7 @@ sh $WORKDIR/$test_type/$batch/$sample/run.sh
 ```
 </details>
 
+<a id="case2"></a>
 ## case2. PureCN エラー終了時の手順
 eWES Pipeline CNV解析工程において PureCN の実行時に purity/ploidy の算出ができずに途中終了することがある。\
 2025/6/6 時点では、bin size 400,800,1600のうちいずれか1つだけエラー終了するケースが確認されています。
@@ -130,6 +142,7 @@ conda deactivate
 ```
 </details>
 
+<a id="case3"></a>
 ## case3. STAR-SEQR 超過時の手順
 WTS Pipeline Fusion解析工程において、STAR-SEQRが長時間かかる場合がある。\
 200時間を超えるとタイムアウトする可能性があるとのこと。
@@ -270,9 +283,9 @@ snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS
 ```
 conda deactivate
 ```
-
 </details>
 
+<a id="case5"></a>
 ## case5. STAR-SEQR 停止による解析中断
 WTS Pipeline Fusion解析工程において、STAR-SEQRでbreakpointの候補が1つもないと処理が中断されるため、次のステップ(convert_cff)が実行されない。※リード数がかなり少ない場合などに起こる
 <details>
