@@ -343,7 +343,7 @@ conda deactivate
 </details>
 
 ## case6. Fusion figure のレイアウトエラー（文字切れなど）
-WTS Pipeline Fusion解析工程において、domain名が長い、domainの数が多いなどの場合に、Fusion Fugure のレイアウトが崩れることがある。
+WTS Pipeline Fusion解析工程において、解析自体は正常終了しているが、domain名が長い、domainの数が多いなどの場合に Fusion Fugure のレイアウトが崩れることがある。
 <details>
   <summary> 
     More Details
