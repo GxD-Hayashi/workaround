@@ -4,14 +4,14 @@
 また、解析フォルダのファイル操作を伴うため、**全ての工程は gxd_pipeline ユーザーで実行してください。**
 
 ## 解析が途中終了しているかどうかの確認方法
-worksheet ツールの checkコマンド または OncoStation の Clinical Report ページでDB上で解析実行中(ANALYSIS STATUS=101)になっているSampleIDを確認する。\
-また、qstatコマンドを利用して実際に投入されている実行中のジョブIDを確認する。
+ ① worksheet ツールの checkコマンドで解析実行中(ANALYSIS STATUS=101)になっているSampleIDを確認する \
+ ② OncoStation の Clinical Report ページで解析の進捗を表示する項目「Progress」が2つめで止まっているSampleIDを確認する \
+ ③ qstatコマンドを利用して実際に投入されている実行中のジョブIDを確認する ※タイムラグがあるので、qstatは数回実行して確認する
 ```
 worksheet check ‐fc <flowcellid>
 qstat -r | grep Full | cut -f1 -d "." | sort | uniq
 ```
-解析実行中のはずが実際にはジョブが投入されていない場合、解析が途中で終了している可能性が高い。\
-※タイムラグがあるので、qstatは数回実行して確認すること。\
+①③ または ②③ のSampleIDを比較し、解析実行中のはずが実際にはジョブが投入されていない場合、解析が途中で終了している可能性が高い。\
 途中終了している検体があった場合は以下の手順で原因を特定する。
 
 ### 1\. 変数の設定
