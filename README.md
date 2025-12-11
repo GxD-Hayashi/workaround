@@ -20,7 +20,6 @@ WORKDIR=/data1/data/result
 test_type=
 batch=
 sample=
-SIF=/data1/GxD_${test_type}/Pipeline/containers/inhouse.sif
 ```
 test_type : 解析種別。eWESまたはWTS \
 batch : バッチフォルダ名 \
@@ -60,7 +59,6 @@ WORKDIR=/data1/data/result
 test_type=
 batch=
 sample=
-SIF=/data1/GxD_${test_type}/Pipeline/containers/inhouse.sif
 ```
 test_type : 解析種別。eWESまたはWTS \
 batch : バッチフォルダ名 \
@@ -90,6 +88,7 @@ sample=
 ```
 batch : 当該検体のbatchフォルダ名 \
 sample :当該検体のSample ID
+
 ### 2\. bin sizeの設定
 PureCNを完了した bin size について、\
 &nbsp;&nbsp;&nbsp;&nbsp; **[WORKDIR]/[batch]/[sample]/CNV/PureCN/[bin_size]/${sample}.tumour.exome.purecn.csv** \
@@ -101,6 +100,7 @@ PureCNが実行できたものが1つだけの場合、GSの判断を仰ぐ。
 bin_size=
 ```
 bin_size : 400,800,1600 のうち1つを採用
+
 ### 3\. データの編集
 残りの工程の実行に必要なファイルを作成する。
 ```
