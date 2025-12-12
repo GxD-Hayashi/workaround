@@ -35,12 +35,12 @@ ll -t *.err | less
 *.err ファイルの中身を確認する。**最終行が「1 of 1 steps (100%) done」でないものは正常終了できなかったもの。**\
 *.err のファイル名からどの工程で止まったかを推測し、中断された原因に沿って対応する。
 
-|エラーログファイル名                |エラーの原因              |対応                      |
+|エラーログファイル                 |エラーの原因              |対応                      |
 |:---------------------------------|:------------------------|:-------------------------|
 |\*.[sampleID].purecn_merge_\*.err |採用する bin size が決定できなかった |[case2](#case2) |
 |\*.[sampleID].purecn_purecn_\*.err|purecn 実行エラー         |[case2](#case2)           |
-|\*.[sampleID].starseqr_\*.err     |STAR-SEQR 超過により解析が進まない ※ジョブは実行中     |[case3](#case3) |
-|\*.[sampleID].merge_cff_\*.err    |Fusion不検出による解析中断 |[case4](#case4)           |
+|\*.[sampleID].merge_cff_\*.err    |Fusion不検出による解析中断 |[case3](#case3)           |
+|\*.[sampleID].starseqr_\*.err     |STAR-SEQR 超過により解析が進まない ※ジョブは実行中     |[case4](#case4) |
 |\*.[sampleID].starseqr_\*.err     |breakpointの候補が1つもなかったため処理が中断された     |[case5](#case5) |
 |上記以外                           |同じノードに高負荷なジョブが投入されたことによる中断     |[case1](#case1) |
 
@@ -143,81 +143,7 @@ conda deactivate
 </details>
 
 <a id="case3"></a>
-## case3. STAR-SEQR 超過時の手順
-WTS Pipeline Fusion解析工程において、STAR-SEQRが長時間かかる場合がある。\
-200時間を超えるとタイムアウトする可能性があるとのこと。
-[STAR-SEQR issue](https://github.com/ExpressionAnalysis/STAR-SEQR/issues/23)
-<details>
-  <summary> 
-    More Details
-  </summary>
-
-### 1\. 変数の設定
-```
-WORKDIR=/data1/data/result/WTS
-SIF=/data1/GxD_WTS/Pipeline/containers/metafusion.sif
-SCRIPT=/MetaFusion/scripts/convert_fusion_results_to_cff.py
-batch=
-sample=
-```
-batch : 当該検体のbatchフォルダ名 \
-sample : 当該検体のSample ID
-
-### 2\. STAR-SEQR 進捗状況の確認
-ログの最終行に以下の文字列が含まれていることを確認する。（融合候補の相同性を計算する工程。STAR-SEQRが終了しない場合はここでスタックしている可能性が高い）
->	INFO - Getting fusions homology mapping scores
-```
-tail -4 `ls -t ${WORKDIR}/${batch}/${sample}/Logs/*.${sample}.starseqr_[0-9]*.err | head -1`
-```
-または、ログファイルに以下の文字列が出現することを確認する。(chimeric transcriptsの書き出し終了フラグ)
->	INFO - Writing chimeric transcripts
-```
-grep "INFO - Writing chimeric transcript" `ls -t  ${WORKDIR}/${batch}/${sample}/Logs/*.${sample}.starseqr_[0-9]*.err | head -1`
-```
-### 3\. 実行ジョブの削除 
-qstat -r で実行中のジョブを確認し、job name が [sample].starseqr_[0-9] があれば qdel で強制終了する。\
-※ STAR-SEQR実行中の場合のみ実施。**すでにタイムアウトしている場合はスキップする。**
-
-### 4\. convert_cff 工程の実行
-STAR-SEQR の結果ファイルが作成されず、後続の convert_cff工程でエラー終了するため、この工程を手作業で実行する。\
-arriba/STAR-Fusionの結果ファイルをcff形式に整形する。
-```
-mkdir ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion 
-singularity exec --bind /data1 $SIF $SCRIPT ${sample} - Tumor arriba ${WORKDIR}/${batch}/${sample}/Fusion/Arriba/${sample}.fusions.tsv ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion
-singularity exec --bind /data1 $SIF $SCRIPT ${sample} - Tumor star_fusion ${WORKDIR}/${batch}/${sample}/Fusion/STAR-Fusion/star-fusion.fusion_predictions.abridged.coding_effect.tsv ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion
-```
-STAR-SEQR のcffファイルはダミーを作成する。
-```
-yes NA | head -n 17 | paste -sd '\t' > ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion/${sample}.star_seqr.cff
-```
-### 5\. 後工程の実行
-STAR-SEQR工程を明示的にスキップしてPipelineを実行するsnakefileを利用する。\
-&nbsp;&nbsp;&nbsp;&nbsp; /data1/GxD_WTS/Pipeline/workflow/Snakefile_prevent
-snakemake実行用の環境に入る。
-```
-source /data1/iGeniPipe/miniconda3/bin/activate cs
-```
-必要に応じて --unlock オプションで作業ディレクトリのロックを解除する。
-```
-snakemake --unlock --snakefile /data1/GxD_WTS/Pipeline/workflow/Snakefile_prevent --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch}
-```
-snakemake dry run で実行されるコマンドを確認する。\
-starseqrが実行されないこと、merge_cff以降が実行されることを確認する。
-```
-snakemake --dry-run --snakefile /data1/GxD_WTS/Pipeline/workflow/Snakefile_prevent --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch}
-```
-snakemake実行
-```
-snakemake --snakefile /data1/GxD_WTS/Pipeline/workflow/Snakefile_prevent --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} &
-```
-仮想環境からでる。
-```
-conda deactivate
-```
-</details>
-
-<a id="case4"></a>
-## case4. Fusion不検出による解析中断 
+## case3. Fusion不検出による解析中断 
 WTS Pipeline Fusion解析工程において、Arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、いずれか1つ以上のツールでFusionが検出されず rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。
 <details>
   <summary> 
@@ -266,6 +192,7 @@ arribaの場合
 ```
 yes NA | head -n 17 | paste -sd '\t' > ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion/${sample}.arriba.cff
 ```
+
 ### 5\. 後工程の実行
 snakemake実行用の環境に入る
 ```
@@ -275,13 +202,114 @@ snakemake dry run で実行されるコマンドを確認する。convert_cffを
 ```
 snakemake --dry-run --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch}
 ```
-解析の続きを実行する
-```
-snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} &
-```
 仮想環境から出る
 ```
 conda deactivate
+```
+解析の続きを実行する
+```
+sh ${WORKDIR}/${batch}/${sample}/run.sh
+```
+</details>
+
+<a id="case4"></a>
+## case4. STAR-SEQR 超過時の手順
+WTS Pipeline Fusion解析工程において、STAR-SEQRが長時間かかる場合がある。\
+200時間を超えるとタイムアウトする可能性があるとのこと。
+[STAR-SEQR issue](https://github.com/ExpressionAnalysis/STAR-SEQR/issues/23)
+<details>
+  <summary> 
+    More Details
+  </summary>
+
+### 1\. 変数の設定
+```
+WORKDIR=/data1/data/result/WTS
+SIF=/data1/GxD_WTS/Pipeline/containers/metafusion.sif
+SCRIPT=/MetaFusion/scripts/convert_fusion_results_to_cff.py
+batch=
+sample=
+```
+batch : 当該検体のbatchフォルダ名 \
+sample : 当該検体のSample ID
+
+### 2\. STAR-SEQR 進捗状況の確認
+ログの最終行に以下の文字列が含まれていることを確認する。（融合候補の相同性を計算する工程。STAR-SEQRが終了しない場合はここでスタックしている可能性が高い）
+>	INFO - Getting fusions homology mapping scores
+```
+tail -4 `ls -t ${WORKDIR}/${batch}/${sample}/Logs/*.${sample}.starseqr_[0-9]*.err | head -1`
+```
+または、ログファイルに以下の文字列が出現することを確認する。(chimeric transcriptsの書き出し終了フラグ)
+>	INFO - Writing chimeric transcripts
+```
+grep "INFO - Writing chimeric transcript" `ls -t  ${WORKDIR}/${batch}/${sample}/Logs/*.${sample}.starseqr_[0-9]*.err | head -1`
+```
+
+### 3\. 実行ジョブの削除 ※すでにタイムアウトしている場合はスキップする
+qstat -r で実行中のジョブを確認し、job name が [sample].starseqr_[0-9] のものがあれば、以下の手順でジョブを終了させる。
+```
+while true; do
+  PID=`ps x | grep ${sample} | grep "python /opt/STAR-SEQR-0.6.7/starseqr.py" | awk '{print $1}'`
+  if [ "$PID" = "" ]; then break; fi
+  kill -SIGINT $PID
+  sleep 30s
+done
+```
+※ qdelでジョブを強制終了した場合、Snakemake から見ると「未完了ジョブ（incomplete job）」扱いになります。\
+Snakemake は incomplete job を検出すると、ダミーファイルを作成しても、安全のために強制再実行(forced execution)されます。\
+そのため、プロセスを中断させることで「未完了ジョブ（incomplete job）」扱いさせなくします。
+
+### 4\. ダミーファイルの作成
+STAR-SEQR の結果ファイルが未作成のため、後続の convert_cff工程でエラー終了するので、ダミーファイルを作成して続行できるようにする。
+```
+touch ${WORKDIR}/${batch}/${sample}/Fusion/STAR-SEQR/${sample}_STAR-SEQR/${sample}.Aligned.sortedByCoord.out.bam
+touch ${WORKDIR}/${batch}/${sample}/Fusion/STAR-SEQR/${sample}_STAR-SEQR/${sample}.Chimeric.out.junction
+touch ${WORKDIR}/${batch}/${sample}/Fusion/STAR-SEQR/${sample}_STAR-SEQR/${sample}.Chimeric.out.sam
+touch ${WORKDIR}/${batch}/${sample}/Fusion/STAR-SEQR/${sample}_STAR-SEQR/${sample}_STAR-SEQR_candidates.txt
+touch ${WORKDIR}/${batch}/${sample}/Benchmark/Fusion/${sample}.starseqr.tsv
+```
+
+### 5\. 後工程の実行
+snakemake実行用の環境に入る。
+```
+source /data1/iGeniPipe/miniconda3/bin/activate cs
+```
+snakemake dry run で実行されるコマンドを表示し、starseqrが実行されないことを確認する。
+```
+snakemake --dry-run --snakefile /data1/GxD_WTS/Pipeline/workflow/Snakefile --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch}
+```
+仮想環境からでる。
+```
+conda deactivate
+```
+解析の再実行を実施する。
+```
+sh ${WORKDIR}/${batch}/${sample}/run.sh
+```
+
+### 6\. ダミーファイルの作成
+次の工程（convert_cff）は実行されますが、STAR-SEQR は Fusion不検出と同じ挙動となるため、その次の工程（merge_cff）でエラー終了します。（[case3.Fusion不検出による解析中断](#case3) と同じ挙動）\
+そのため、ダミーファイルを作成して merge_cff が実行されるようにします。
+```
+yes NA | head -n 17 | paste -sd '\t' > ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion/${sample}.star_seqr.cff
+```
+
+### 7\. 後工程の実行
+snakemake実行用の環境に入る。
+```
+source /data1/iGeniPipe/miniconda3/bin/activate cs
+```
+snakemake dry run で実行されるコマンドを表示し、merge_cff 以降が実行されることを確認する。
+```
+snakemake --dry-run --snakefile /data1/GxD_WTS/Pipeline/workflow/Snakefile --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch}
+```
+仮想環境からでる。
+```
+conda deactivate
+```
+解析の再実行を実施する。
+```
+sh ${WORKDIR}/${batch}/${sample}/run.sh
 ```
 </details>
 
@@ -310,11 +338,14 @@ cd $WORKDIR/$batch/$sample/Logs
 ll -t *.${sample}.starseqr_*.err
 ```
 
-### 3\. 中間ファイルの作成
+### 3\. ダミーファイルの作成
 次の工程(convert_cff)でSTAR-SEQRの結果として参照するファイルを作成する。
 ```
-cd $WORKDIR/$batch/$sample/Fusion/STAR-SEQR/${sample}_STAR-SEQR
-cp ${sample}_STAR-SEQR_breakpoints.txt ${sample}_STAR-SEQR_candidates.txt
+touch ${WORKDIR}/${batch}/${sample}/Fusion/STAR-SEQR/${sample}_STAR-SEQR/${sample}.Aligned.sortedByCoord.out.bam
+touch ${WORKDIR}/${batch}/${sample}/Fusion/STAR-SEQR/${sample}_STAR-SEQR/${sample}.Chimeric.out.junction
+touch ${WORKDIR}/${batch}/${sample}/Fusion/STAR-SEQR/${sample}_STAR-SEQR/${sample}.Chimeric.out.sam
+touch ${WORKDIR}/${batch}/${sample}/Fusion/STAR-SEQR/${sample}_STAR-SEQR/${sample}_STAR-SEQR_candidates.txt
+touch ${WORKDIR}/${batch}/${sample}/Benchmark/Fusion/${sample}.starseqr.tsv
 ```
 
 ### 4\.  後工程の実行
@@ -322,23 +353,29 @@ snakemake実行用の環境に入る
 ```
 source /data1/iGeniPipe/miniconda3/bin/activate cs
 ```
-snakemake dry run で実行されるコマンドを確認する。starseqr 以降が実行されることを確認する。
+snakemake dry run で実行されるコマンドを確認する。convert_cff 以降が実行されることを確認する。
 ```
 snakemake --dry-run --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} 
 ```
-解析の続きを実行する ※ 強制的に convert_cff から実行させる
-```
-snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun convert_cff &
-```
-STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 [case4.Fusion不検出による解析中断](#case4) を参照してcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成する。
-
-解析の続きを実行する ※ 強制的に merge_cff から実行させる
-```
-snakemake --snakefile $SNAKEFILE --directory /data1/GxD --profile /data1/GxD_WTS/Pipeline/profiles/all.q --config patient_id=${sample} output_dir=${WORKDIR}/${batch} --forcerun merge_cff &
-```
-仮想環境から出る
+仮想環境からでる。
 ```
 conda deactivate
+```
+解析の再実行を実施する。
+```
+sh ${WORKDIR}/${batch}/${sample}/run.sh
+```
+
+### 5\. ダミーファイルの作成
+STAR-SEQRは不検出として扱われるため、次のステップ(merge_cff) で解析が中断される。 [case3.Fusion不検出による解析中断](#case3) を参照してcffファイルを作成する。※ STAR-Fusion、Arribaでも不検出の可能性が高いので、適宜ファイルを作成する。
+```
+yes NA | head -n 17 | paste -sd '\t' > ${WORKDIR}/${batch}/${sample}/Fusion/Metafusion/${sample}.star_seqr.cff
+```
+
+### 6\.  後工程の実行
+解析の再実行を実施する。
+```
+sh ${WORKDIR}/${batch}/${sample}/run.sh
 ```
 </details>
 
