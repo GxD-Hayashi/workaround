@@ -14,7 +14,7 @@ qstat -r | grep Full | cut -f1 -d "." | sort | uniq
 ①③ または ②③ のSampleIDを比較し、解析実行中のはずが実際にはジョブが投入されていない場合、解析が途中で終了している可能性が高い。\
 途中終了している検体があった場合は以下の手順で原因を特定する。
 
-### 1\. 変数の設定
+#### 1\. 変数の設定
 ```
 WORKDIR=/data1/data/result
 test_type=
@@ -25,7 +25,7 @@ test_type : 解析種別。eWESまたはWTS \
 batch : バッチフォルダ名 \
 sample : 当該検体のSample ID
 
-### 2\. ログファイルの確認
+#### 2\. ログファイルの確認
 解析結果を格納しているフォルダに移動してログファイルを確認する 
 ```
 cd $WORKDIR/$test_type/$batch/$sample/Logs
@@ -43,6 +43,44 @@ ll -t *.err | less
 |\*.[sampleID].starseqr_\*.err     |STAR-SEQR 超過により解析が進まない ※ジョブは実行中     |[case4](#case4) |
 |\*.[sampleID].starseqr_\*.err     |breakpointの候補が1つもなかったため処理が中断された     |[case5](#case5) |
 |上記以外                           |同じノードに高負荷なジョブが投入されたことによる中断     |[case1](#case1) |
+
+## 開発チームへのデータ提供
+レビューで結果保留になった場合などに、開発チームへデータを提供して調査してもらうケースがあります。\
+RUO Strage (/data3/CAP/) に提供するデータをコピーしたあと、開発チームに連絡するようGMに依頼してください。\
+提供するデータについて、よくあるケースを以下に示します。
+<details>
+  <summary> 
+    More Details
+  </summary>
+
+#### 【eWES】SNV & InDel について問い合わせる場合
+再計算した *.bam と *.bam.bai を提供します。
+```
+WORKDIR=/data1/data/result
+batch=
+sample=
+
+mkdir -p /data3/CAP/[提供する年月日(8桁数字)]
+rsync -avzru $WORKDIR/eWES/$batch/$sample/Preprocessing/align/${sample}.tumour.recaled.bam* /data3/CAP/[提供する年月日(8桁数字)]/
+```
+#### 【WTS】Fusion について問い合わせる場合
+Fusion 検出時の途中ファイルと、STAR-FusionでFusion検出時に作成されるSAMをBAMに変換し、indexを作成して提供します。
+```
+WORKDIR=/data1/data/result
+batch=
+sample=
+
+mkdir -p /data1/work/[提供する年月日(8桁数字)]
+rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/${sample}.fusion.filtered.tsv /data1/work/[提供する年月日(8桁数字)]/
+rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/Arriba/${sample}.fusions.tsv /data1/work/[提供する年月日(8桁数字)]/
+rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/star-fusion.fusion_predictions.abridged.coding_effect.tsv /data1/work/[提供する年月日(8桁数字)]/
+samtools view -bh $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/STAR_align_starfu/${sample}.star-fusion.Aligned.out.sam | samtools sort -@ 12 -o /data1/work/[提供する年月日(8桁数字)]/${sample}.star-fusion.Aligned.out.bam -
+samtools index /data1/work/[提供する年月日(8桁数字)]/${sample}.star-fusion.Aligned.out.bam
+mv /data1/work/[提供する年月日(8桁数字)] /data3/CAP/[提供する年月日(8桁数字)]
+```
+</details>
+
+その他、開発の要求に応じてデータを送付してください。※個人情報保護の観点から、要求されたデータの提供についてはGMに許可をもらうこと
 
 <a id="case1"></a>
 ## case1. 高負荷による実行停止
