@@ -74,10 +74,16 @@ mkdir -p /data1/work/[提供する年月日(8桁数字)]
 rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/${sample}.fusion.filtered.tsv /data1/work/[提供する年月日(8桁数字)]/
 rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/Arriba/${sample}.fusions.tsv /data1/work/[提供する年月日(8桁数字)]/
 rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/star-fusion.fusion_predictions.abridged.coding_effect.tsv /data1/work/[提供する年月日(8桁数字)]/
+
 samtools view -bh $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/STAR_align_starfu/${sample}.star-fusion.Aligned.out.sam | samtools sort -@ 12 -o /data1/work/[提供する年月日(8桁数字)]/${sample}.star-fusion.Aligned.out.bam -
+# sam が bamに変換済みだった場合
+samtools sort -@ 12 -o /data1/work/[提供する年月日(8桁数字)]/${sample}.star-fusion.Aligned.out.bam $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/STAR_align_starfu/${sample}.star-fusion.Aligned.out.bam
+
 samtools index /data1/work/[提供する年月日(8桁数字)]/${sample}.star-fusion.Aligned.out.bam
 mv /data1/work/[提供する年月日(8桁数字)] /data3/CAP/[提供する年月日(8桁数字)]
 ```
+#### 【WTS】exon skipping について問い合わせる場合
+
 </details>
 
 その他、開発の要求に応じてデータを送付してください。※個人情報保護の観点から、要求されたデータの提供についてはGMに許可をもらうこと
