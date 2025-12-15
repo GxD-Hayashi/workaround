@@ -48,13 +48,14 @@ ll -t *.err | less
 レビューで結果保留になった場合などに、開発チームへデータを提供して調査してもらうケースがあります。\
 RUO Strage (/data3/CAP/) に提供するデータをコピーしたあと、開発チームに連絡するようGMに依頼してください。\
 提供するデータについて、よくあるケースを以下に示します。
+
+#### 【eWES】SNV & InDel について問い合わせる場合
+再計算した *.bam と *.bam.bai を提供します。
 <details>
   <summary> 
     More Details
   </summary>
 
-#### 【eWES】SNV & InDel について問い合わせる場合
-再計算した *.bam と *.bam.bai を提供します。
 ```
 WORKDIR=/data1/data/result
 batch=
@@ -63,30 +64,55 @@ sample=
 mkdir -p /data3/CAP/[提供する年月日(8桁数字)]
 rsync -avzru $WORKDIR/eWES/$batch/$sample/Preprocessing/align/${sample}.tumour.recaled.bam* /data3/CAP/[提供する年月日(8桁数字)]/
 ```
+</details>
+
 #### 【WTS】Fusion について問い合わせる場合
 Fusion 検出時の途中ファイルと、STAR-FusionでFusion検出時に作成されるSAMをBAMに変換し、indexを作成して提供します。
+<details>
+  <summary> 
+    More Details
+  </summary>
+
 ```
 WORKDIR=/data1/data/result
 batch=
 sample=
 
-mkdir -p /data1/work/[提供する年月日(8桁数字)]
-rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/${sample}.fusion.filtered.tsv /data1/work/[提供する年月日(8桁数字)]/
-rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/Arriba/${sample}.fusions.tsv /data1/work/[提供する年月日(8桁数字)]/
-rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/star-fusion.fusion_predictions.abridged.coding_effect.tsv /data1/work/[提供する年月日(8桁数字)]/
+mkdir -p /data1/work/[提供する年月日(8桁数字)]/$sample
+rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/${sample}.fusion.filtered.tsv /data1/work/[提供する年月日(8桁数字)]/$sample/
+rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/Arriba/${sample}.fusions.tsv /data1/work/[提供する年月日(8桁数字)]/$sample/
+rsync -avzru $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/star-fusion.fusion_predictions.abridged.coding_effect.tsv /data1/work/[提供する年月日(8桁数字)]/$sample/
 
-samtools view -bh $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/STAR_align_starfu/${sample}.star-fusion.Aligned.out.sam | samtools sort -@ 12 -o /data1/work/[提供する年月日(8桁数字)]/${sample}.star-fusion.Aligned.out.bam -
+samtools view -bh $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/STAR_align_starfu/${sample}.star-fusion.Aligned.out.sam | samtools sort -@ 12 -o /data1/work/[提供する年月日(8桁数字)]/$sample/${sample}.star-fusion.Aligned.out.bam -
 # sam が bamに変換済みだった場合
-samtools sort -@ 12 -o /data1/work/[提供する年月日(8桁数字)]/${sample}.star-fusion.Aligned.out.bam $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/STAR_align_starfu/${sample}.star-fusion.Aligned.out.bam
+samtools sort -@ 12 -o /data1/work/[提供する年月日(8桁数字)]/$sample/${sample}.star-fusion.Aligned.out.bam $WORKDIR/WTS/$batch/$sample/Fusion/STAR-Fusion/STAR_align_starfu/${sample}.star-fusion.Aligned.out.bam
 
-samtools index /data1/work/[提供する年月日(8桁数字)]/${sample}.star-fusion.Aligned.out.bam
+samtools index /data1/work/[提供する年月日(8桁数字)]/$sample/${sample}.star-fusion.Aligned.out.bam
 mv /data1/work/[提供する年月日(8桁数字)] /data3/CAP/[提供する年月日(8桁数字)]
 ```
-#### 【WTS】exon skipping について問い合わせる場合
-
 </details>
 
-その他、開発の要求に応じてデータを送付してください。※個人情報保護の観点から、要求されたデータの提供についてはGMに許可をもらうこと
+#### 【WTS】exon skipping について問い合わせる場合
+発現量値検出時に作成されるBAMと、indexを作成して提供します。
+<details>
+  <summary> 
+    More Details
+  </summary>
+
+```
+WORKDIR=/data1/data/result
+batch=
+sample=
+
+mkdir -p /data1/work/[提供する年月日(8桁数字)]/$sample
+rsync -avzru $WORKDIR/WTS/$batch/$sample/Expression/STAR_align_exp/${sample}.Aligned.sortedByCoord.out.bam /data1/work/[提供する年月日(8桁数字)]/$sample/
+samtools index /data1/work/[提供する年月日(8桁数字)]/$sample/${sample}.Aligned.sortedByCoord.out.bam
+mv /data1/work/[提供する年月日(8桁数字)] /data3/CAP/[提供する年月日(8桁数字)]
+```
+</details>
+
+その他、開発の要求に応じてデータを送付してください。\
+※個人情報保護の観点から、要求されたデータの提供についてはGMに許可をもらってから作業してください。
 
 <a id="case1"></a>
 ## case1. 高負荷による実行停止
