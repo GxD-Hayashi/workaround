@@ -530,39 +530,39 @@ batch : バッチフォルダ名 \
 sample : 当該検体のSample ID
 ### 2\. データの編集
 解析結果を格納しているフォルダに移動してsummaryファイルを編集する \
- - type1 eWES SNV & InDelの編集
+ - 【eWES】SNV & InDel の編集
 ```
 cd ${WORKDIR}/${batch}/${sample}/Summary
 cp ${sample}.summarized.snv.target.tsv ${sample}.summarized.snv.target.original.tsv
 vi ${sample}.summarized.snv.target.tsv
 ```
- - type2 eWES SNV/InDel with Insufficient Depthの編集
+ - 【eWES】SNV/InDel with Insufficient Depthの 編集
 ```
 cd ${WORKDIR}/${batch}/${sample}/Summary
 cp ${sample}.summarized.snv.exome.tsv ${sample}.summarized.snv.exome.original.tsv
 vi ${sample}.summarized.snv.exome.tsv
 ```
- - type3 eWES CNVの編集
+ - 【eWES】CNV の編集
 ```
 cd ${WORKDIR}/${batch}/${sample}/Summary
 cp ${sample}.summarized.cnv.exome.tsv ${sample}.summarized.cnv.exome.original.tsv
 vi ${sample}.summarized.cnv.exome.tsv
 ```
- - type4 WTS Fusionの編集
+ - 【WTS】Fusion の編集
 ```
 cd ${WORKDIR}/${batch}/${sample}/Summary
 cp ${sample}.summarized.fusion.tsv ${sample}.summarized.fusion.original.tsv
 vi ${sample}.summarized.fusion.tsv
 ```
-※ type1-4 は不要な変異の行を削除して上書き保存（DRUG が複数該当する場合は、該当するものすべて削除する）
+※ 以上のケースは不要な変異の行を削除して上書きする
 
- - type5 WTS Alternative Splicingの編集
+ - 【WTS】Alternative Splicing の編集
 ```
 cd ${WORKDIR}/${batch}/${sample}/Summary
 cp ${sample}.summarized.splice.tsv ${sample}.summarized.splice.original.tsv
 vi ${sample}.summarized.splice.tsv
 ```
-※ type5 は不要な変異の2カラム目以降をblankにして上書き保存（1列目の値はレポートに使用するので、行削除ではなく値を削除する）
+※ Alternative Splicing のみ削除する変異の2カラム目以降をblankにして上書き保存する（1列目の値はレポートに使用するので、行削除ではなく値を削除する）
 
 ### 3\. レポート再作成の準備
 データベースに登録済みの解析結果を削除して report.json, report.pdfをリネームし、analysis statusを101（解析中）にセットする。\
