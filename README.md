@@ -589,8 +589,30 @@ singularity exec --bind /data1 /data1/labTools/labTools.sif python /data1/labToo
 ⇒ cronにより10分以内に解析が開始され、report_json 工程のみ実施される。
 
 ### 4\. データベースへの再アップロードとレポート再作成
-前工程でanalysis statusを101（解析中）にセットした場合に実行する。解析実行時のPipelineバージョンがデフォルトとは異なる場合は、**解析実行時のPipelineバージョンのmodulesのmain.pyファイルを指定する**こと。
+前工程でanalysis statusを101（解析中）にセットした場合に実行する。解析実行時のPipelineバージョンがデフォルトとは異なる場合は、**解析実行時のバージョンディレクトリ直下にある modules フォルダの main.py を指定する**こと。
 ```
 singularity shell --bind /data1 $SIF python3 /data1/GxD_${test_type}/Pipeline/modules/report_json/main.py -s ${sample} -d ${WORKDIR}/${test_type}/${batch}/${sample}/Summary -o ${WORKDIR}/${test_type}/${batch}/${sample}/Summary/${sample}.report.json -r ${WORKDIR}/${test_type}/${batch}/${sample}/Summary/${sample}.report.pdf -c True -u 192.168.9.100 -p 3014 -v v1.1.0 --upload true --start_log ${WORKDIR}/${test_type}/${batch}/${sample}/QC/fastp/${sample}.fastp.start.time.log
 ```
 </details>
+
+## case8. 不要な一時ファイルの削除
+GxD eWES/WTS Pipelineではワークディレクトリを使いまわす設計になっているため、metadata や log などが蓄積されます。\
+snakemake --dry-run が重いと感じる場合は不要なファイルの削除を行ってください。
+<details>
+  <summary> 
+    一時ファイル等の削除コマンド（1週間以上前のデータに限定）
+  </summary>
+
+```
+cd /data1/GxD/.snakemake
+find ./ -maxdepth 1 -type d -name 'tmp.*' -mtime +7 | xargs rm -rf
+cd /data1/GxD/.snakemake/log
+find ./ -maxdepth 1 -type f -name '*.snakemake.log' -mtime +7 | xargs rm
+cd /data1/GxD/.snakemake/metadata
+find ./ -maxdepth 1 -type f -name 'L2RhdGExL2RhdGEvcmVzd*' -mtime +7 | xargs rm -rf
+```
+</details>
+
+gxd_pipeline ユーザーで実行してください。\
+実行中の解析や、中断された解析（再開予定があるもの）がある場合は行わないでください。\
+pipelineに不具合があり、ログの追跡が必要な場合は、該当する検体のデータは避難させる等の措置を講じてください。
