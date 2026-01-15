@@ -47,11 +47,16 @@ ll -t *.err | less
 
 ## 開発チームへのデータ提供
 レビューで結果保留になった場合などに、開発チームへデータを提供して調査してもらうケースがあります。\
-RUO Strage (/data3/CAP/) に提供するデータをコピーしたあと、開発チームに連絡するようGMに依頼してください。\
-提供するデータについて、よくあるケースを以下に示します。
+monitoring inquire コマンドで作成することもできます。\
+手作業でデータセットを作成する場合は、RUO Strage (/data3/CAP/) に提供するデータセットを作成したあと、開発チームに連絡するようGMに依頼してください。
 
-#### 【eWES】SNV & InDel について問い合わせる場合
-再計算した *.bam と *.bam.bai を提供します。
+<details>
+  <summary> 
+    手作業で行う場合
+  </summary>
+
+ #### 【eWES】SNV & InDel について問い合わせる場合
+変異コールツールへの入力BAMを提供します。
 <details>
   <summary> 
     More Details
@@ -68,7 +73,7 @@ rsync -avzru $WORKDIR/eWES/$batch/$sample/Preprocessing/align/${sample}.tumour.r
 </details>
 
 #### 【WTS】Fusion について問い合わせる場合
-Fusion 検出時の途中ファイルと、STAR-FusionでFusion検出時に作成されるSAMをBAMに変換し、indexを作成して提供します。
+Fusion 検出時の途中ファイルと、STAR-FusionでFusion検出時に作成されるSAM/BAMを提供します。
 <details>
   <summary> 
     More Details
@@ -94,7 +99,7 @@ mv /data1/work/[提供する年月日(8桁数字)] /data3/CAP/[提供する年�
 </details>
 
 #### 【WTS】exon skipping について問い合わせる場合
-発現量値検出時に作成されるBAMと、indexを作成して提供します。
+発現量値検出時に作成されるBAMを提供します。
 <details>
   <summary> 
     More Details
@@ -111,7 +116,7 @@ samtools index /data1/work/[提供する年月日(8桁数字)]/$sample/${sample}
 mv /data1/work/[提供する年月日(8桁数字)] /data3/CAP/[提供する年月日(8桁数字)]
 ```
 </details>
-
+</details>
 その他、開発の要求に応じてデータを送付してください。\
 ※個人情報保護の観点から、要求されたデータの提供についてはGMに許可をもらってから作業してください。
 
