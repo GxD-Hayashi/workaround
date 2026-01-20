@@ -7,7 +7,7 @@
 ## 解析が途中終了しているかどうかの確認方法
  ① worksheet ツールの checkコマンドで解析実行中(ANALYSIS STATUS=101)になっているSampleIDを確認する \
  ② OncoStation の Clinical Report ページで解析の進捗を表示する項目「Progress」が2つめで止まっているSampleIDを確認する \
- ③ qstatコマンドを利用して実際に投入されている実行中のジョブIDを確認する ※タイムラグがあるので、qstatは数回実行して確認する
+ ③ qstatコマンドを利用して実際に投入されている実行中のジョブIDを確認する ※タイムラグがあるので、数回実行して確認する
 ```
 qstat -r -u gxd_pipeline | grep Full | cut -f1 -d "." | sort | uniq
 ```
