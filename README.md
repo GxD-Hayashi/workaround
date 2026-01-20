@@ -9,8 +9,7 @@
  ② OncoStation の Clinical Report ページで解析の進捗を表示する項目「Progress」が2つめで止まっているSampleIDを確認する \
  ③ qstatコマンドを利用して実際に投入されている実行中のジョブIDを確認する ※タイムラグがあるので、qstatは数回実行して確認する
 ```
-worksheet check ‐fc <flowcellid>
-qstat -r | grep Full | cut -f1 -d "." | sort | uniq
+qstat -r -u gxd_pipeline | grep Full | cut -f1 -d "." | sort | uniq
 ```
 ①③ または ②③ のSampleIDを比較し、解析実行中のはずが実際にはジョブが投入されていない場合、解析が途中で終了している可能性が高い。\
 途中終了している検体があった場合は以下の手順で原因を特定する。
