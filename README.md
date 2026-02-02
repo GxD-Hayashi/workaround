@@ -159,6 +159,11 @@ sh $WORKDIR/$test_type/$batch/$sample/run.sh
 <a id="case2"></a>
 ## case2. PureCN エラー終了時の手順
 eWES Pipeline CNV解析工程において PureCN の実行時に purity/ploidy の算出ができずに途中終了することがある。\
+purecn_purecn_* のエラーログファイルの最後2行が以下と一致する場合、このケースに該当する。※purecn_purecn 工程は3種類あることに注意
+```
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+```
 2025/6/6 時点では、bin size 400,800,1600のうちいずれか1つだけエラー終了するケースが確認されています。
 <details>
   <summary> 
@@ -230,7 +235,12 @@ conda deactivate
 
 <a id="case3"></a>
 ## case3. Fusion不検出による解析中断 
-WTS Pipeline Fusion解析工程において、Arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、いずれか1つ以上のツールでFusionが検出されず rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。
+WTS Pipeline Fusion解析工程において、Arriba, STAR-Fusion, STAR-SEQR の出力結果のうち、いずれか1つ以上のツールでFusionが検出されず rule: convert_cff で出力されるcffが空ファイルとなった場合にエラー終了する。\
+merge_cff_* のエラーログファイルの最後2行が以下と一致する場合、このケースに該当する。
+```
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+```
 <details>
   <summary> 
     More Details
@@ -401,7 +411,12 @@ sh ${WORKDIR}/${batch}/${sample}/run.sh
 
 <a id="case5"></a>
 ## case5. STAR-SEQR 停止による解析中断
-WTS Pipeline Fusion解析工程において、STAR-SEQRでbreakpointの候補が1つもないと処理が中断されるため、次のステップ(convert_cff)が実行されない。※リード数がかなり少ない場合などに起こる
+WTS Pipeline Fusion解析工程において、STAR-SEQRでbreakpointの候補が1つもないと処理が中断されるため、次のステップ(convert_cff)が実行されない。※リード数がかなり少ない場合などに起こる\
+starseqr_* 工程のエラーログファイルの最後2行が以下と一致する場合、このケースに該当する。
+```
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+```
 <details>
   <summary> 
     More Details
