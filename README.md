@@ -626,7 +626,8 @@ singularity shell --bind /data1 $SIF python3 /data1/GxD_${test_type}/Pipeline/mo
 </details>
 
 ## case8. cron ログファイルの削除
-cron実行時の標準出力がログファイルとして保存されています。長期間放置すると膨大なサイズになるため、数か月に1度はリフレッシュしてください。
+cron実行時の標準出力がログファイルとして保存されています。\
+長期間放置すると膨大なサイズになるため、数か月に1度のリフレッシュを推奨します。
 ```
 mv /data1/GxD/gxd_daemon/logs/gxd_daemon.out /data1/GxD/gxd_daemon/logs/legacy/gxd_daemon_[yyyymmdd].out 
 ```
