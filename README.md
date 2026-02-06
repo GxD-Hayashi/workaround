@@ -625,7 +625,17 @@ singularity shell --bind /data1 $SIF python3 /data1/GxD_${test_type}/Pipeline/mo
 ```
 </details>
 
-## case8. 不要な一時ファイルの削除
+## case8. cron ログファイルの削除
+cron実行時の標準出力がログファイルとして保存されています。長期間放置すると膨大なサイズになるため、数か月に1度はリフレッシュしてください。
+```
+mv /data1/GxD/gxd_daemon/logs/gxd_daemon.out /data1/GxD/gxd_daemon/logs/legacy/gxd_daemon_[yyyymmdd].out 
+```
+⇒ /data1/GxD/gxd_daemon/logs/legacy/gxd_daemon_\[yyyymmdd\].out として一時保存する。
+
+/data1/GxD/gxd_daemon/logs/gxd_daemon_[yyyymmdd].log ファイルについては月別に作成されますので、前月までのファイルを legacyフォルダに移動してください。\
+また、legacyフォルダのファイルが溜まってきたら適宜削除してください。
+
+## case9. 不要な一時ファイルの削除
 GxD eWES/WTS Pipelineではワークディレクトリを使いまわす設計になっているため、metadata や log などが蓄積されます。\
 snakemake --dry-run が重いと感じる場合は不要なファイルの削除を行ってください。
 <details>
